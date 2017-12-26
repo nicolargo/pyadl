@@ -8,3 +8,4 @@ __license__ = 'MIT'
 
 # Add:
 # from pyadl import <list of classes of the __all__ variable
+from .adl_api import *
