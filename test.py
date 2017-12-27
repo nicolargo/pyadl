@@ -1,126 +1,29 @@
+# Copyright (C) 2017 by Gergo Szabo <szager88@gmail.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+
+from __future__ import print_function
 import os, sys
 from optparse import OptionParser
 from pyadl import *
-import collections
 
-class ADLError(Exception):
-	pass
-
-adapters = []
-
-def list_adapters():
-   
-	context = ADL_CONTEXT_HANDLE()
-	if ADL2_Main_Control_Create(ADL_Main_Memory_Alloc, 1, byref(context)) != ADL_OK:
-		raise ADLError("ADL2_Main_Control_Create failed.")
-	
-	num_adapters = c_int(-1)
-	if ADL2_Adapter_NumberOfAdapters_Get(context, byref(num_adapters)) != ADL_OK:
-		raise ADLError("ADL2_Adapter_NumberOfAdapters_Get failed.")
-	
-	# allocate an array of AdapterInfo, see ctypes docs for more info
-	AdapterInfoArray = (AdapterInfo * num_adapters.value)() 
-	
-	# AdapterInfo_Get grabs info for ALL adapters in the system
-	if ADL2_Adapter_AdapterInfo_Get(context, cast(AdapterInfoArray, LPAdapterInfo), sizeof(AdapterInfoArray)) != ADL_OK:
-		raise ADLError("ADL2_Adapter_AdapterInfo_Get failed.")
-
-	deviceAdapter = collections.namedtuple('DeviceAdapter', ['AdapterIndex', 'AdapterID', 'BusNumber', 'UDID'])
-	devices = []
-	
-	for adapter in AdapterInfoArray:
-		index = adapter.iAdapterIndex
-		busNum = adapter.iBusNumber
-		udid = adapter.strUDID
-				
-		adapterID = c_int(-1)
-		
-		if ADL2_Adapter_ID_Get(context, 0, byref(adapterID)) != ADL_OK:
-			raise ADLError("ADL2_Adapter_Active_Get failed.")
-
-		found = False
-		for device in devices:
-			if (device.AdapterID.value == adapterID.value):
-				found = True
-				break
-		
-		# save it in our list if it's the first controller of the adapter
-		if (found == False):
-			devices.append(deviceAdapter(index,adapterID,busNum,udid))
-	
-		adapter_info = []
-	for device in devices:
-		adapter_info.append(AdapterInfoArray[device.AdapterIndex])
-	
-	ADL2_Main_Control_Destroy(context)
-	
-	return adapter_info
-	
-def show_status():
-	adapters = list_adapters()
-	
-	context = ADL_CONTEXT_HANDLE()
-	if ADL2_Main_Control_Create(ADL_Main_Memory_Alloc, 1, byref(context)) != ADL_OK:
-		raise ADLError("ADL2_Main_Control_Create failed.")
-		
-	for index, info in enumerate(adapters):
-		print "%d. %s" % (index, info.strAdapterName)
-
-		activity = ADLPMActivity()
-		activity.iSize = sizeof(activity)
-		
-		if ADL2_Overdrive5_CurrentActivity_Get(context, info.iAdapterIndex, byref(activity)) != ADL_OK:
-			raise ADLError("ADL2_Overdrive5_CurrentActivity_Get failed.")
-		
-		print ("	engine clock %gMHz, memory clock %gMHz, core voltage %gVDC, performance level %d, utilization %d%%" % 
-					(activity.iEngineClock/100.0, activity.iMemoryClock/100.0, activity.iVddc,
-					 activity.iCurrentPerformanceLevel, activity.iActivityPercent))
-			
-		fan_speed = {}
-		for speed_type in (ADL_DL_FANCTRL_SPEED_TYPE_PERCENT, ADL_DL_FANCTRL_SPEED_TYPE_RPM):	
-			fan_speed_value = ADLFanSpeedValue()
-			fan_speed_value.iSize = sizeof(fan_speed_value)
-			fan_speed_value.iSpeedType = speed_type
-
-			if ADL2_Overdrive5_FanSpeed_Get(context, info.iAdapterIndex, 0, byref(fan_speed_value)) != ADL_OK:
-				fan_speed[speed_type] = None
-				continue
-		
-			fan_speed[speed_type] = fan_speed_value.iFanSpeed
-			user_defined = fan_speed_value.iFlags & ADL_DL_FANCTRL_FLAG_USER_DEFINED_SPEED
-
-		if bool(fan_speed[ADL_DL_FANCTRL_SPEED_TYPE_PERCENT]) and bool(fan_speed[ADL_DL_FANCTRL_SPEED_TYPE_RPM]):
-			print "	fan speed %d%% (%d RPM) (%s)" % (fan_speed[ADL_DL_FANCTRL_SPEED_TYPE_PERCENT],
-														fan_speed[ADL_DL_FANCTRL_SPEED_TYPE_RPM],
-														"user-defined" if user_defined else "default")
-		elif bool(fan_speed[ADL_DL_FANCTRL_SPEED_TYPE_PERCENT]):
-			print "	fan speed %d%% (%s)" % (fan_speed[ADL_DL_FANCTRL_SPEED_TYPE_PERCENT],
-											   "user-defined" if user_defined else "default")				
-		elif bool(fan_speed[ADL_DL_FANCTRL_SPEED_TYPE_RPM]) is True:
-			print "	fan speed %d RPM (%s)" % (fan_speed[ADL_DL_FANCTRL_SPEED_TYPE_RPM],
-												 "user-defined" if user_defined else "default")
-		else:
-			print "	unable to get fan speed"
-			
-		temperature = ADLTemperature()
-		temperature.iSize = sizeof(temperature)
-			
-		if ADL2_Overdrive5_Temperature_Get(context, info.iAdapterIndex, 0, byref(temperature)) != ADL_OK:
-			raise ADLError("ADL2_Overdrive5_Temperature_Get failed.")
-		
-		print "	temperature %g C" % (temperature.iTemperature/1000.0)
-		
-		# Powertune level
-		powertune_level_value = c_int()
-		dummy = c_int()
-		
-		if ADL2_Overdrive5_PowerControl_Get(context, info.iAdapterIndex, byref(powertune_level_value), byref(dummy)) != ADL_OK:
-			raise ADLError("ADL_Overdrive5_PowerControl_Get failed.")
-
-		print "	powertune %d%%" % (powertune_level_value.value)
-		
-	ADL2_Main_Control_Destroy(context)
-	
 if __name__ == "__main__":
 	usage = "usage: %prog [options]"
 	
@@ -136,18 +39,41 @@ if __name__ == "__main__":
 	result = 0
 
 	try:
-
 		if options.action == "list_adapters":
-			adapters = list_adapters()
-			for index, info in enumerate(adapters):
-				print "%d. %s" % (index, info.strAdapterName)
+		
+			devices = ADLManager.getInstance().getDevices()
+			for device in devices:
+				print("{0}. {1}".format(device.adapterIndex, device.adapterName))
+				
 		elif options.action == "status":
-			show_status()
+		
+			devices = ADLManager.getInstance().getDevices()
+			for device in devices:
+				print("{0}. {1}".format(device.adapterIndex, device.adapterName))
+				
+				coreVoltageMin, coreVoltageMax = device.getCoreVoltageRange()
+				print ("\tEngine core voltage: {0} mV ({1} mV - {2} mV)".format(device.getCurrentCoreVoltage(), coreVoltageMin, coreVoltageMax))
+				
+				coreFrequencyMin, coreFrequencyMax = device.getEngineClockRange()
+				print ("\tEngine clock: {0} MHz ({1} MHz - {2} MHz)".format(device.getCurrentEngineClock(), coreFrequencyMin, coreFrequencyMax))
+				
+				memoryFrequencyMin, memoryFrequencyMax = device.getMemoryClockRange()
+				print ("\tMemory clock: {0} MHz ({1} MHz - {2} MHz)".format(device.getCurrentMemoryClock(), memoryFrequencyMin, memoryFrequencyMax))
+				
+				fanSpeedPercentageMin, fanSpeedPercentageMax = device.getFanSpeedRange(ADL_DEVICE_FAN_SPEED_TYPE_PERCENTAGE)
+				print ("\tFan speed: {0} % ({1} % - {2} %)".format(device.getCurrentFanSpeed(ADL_DEVICE_FAN_SPEED_TYPE_PERCENTAGE), fanSpeedPercentageMin, fanSpeedPercentageMax))
+				
+				fanSpeedRPMMin, fanSpeedRPMMax = device.fanSpeedRPMRange 	#can use this, because device.getFanSpeedRange grab % and RPM in the same time
+																			#or also can use device.getFanSpeedRange(ADL_DEVICE_FAN_SPEED_TYPE_RPM)
+				print ("\tFan speed: {0} RPM ({1} RPM - {2} RPM)".format(device.getCurrentFanSpeed(ADL_DEVICE_FAN_SPEED_TYPE_RPM), fanSpeedRPMMin, fanSpeedRPMMax))
+				
+				print ("\tTemperature: {0} Celsius".format(device.getCurrentTemperature()))
+				print ("\tUsage: {0} %".format(device.getCurrentUsage()))
 		else:
 			parser.print_help()
 	
-	except ADLError, err:
+	except ADLError as err:
 		result = 1
-		print err
+		print(err)
 		
 	sys.exit(result)

@@ -805,4 +805,12 @@ ADL2_Overdrive5_PowerControl_Get = _libadl.ADL2_Overdrive5_PowerControl_Get
 ADL2_Overdrive5_PowerControl_Get.restype = c_int
 ADL2_Overdrive5_PowerControl_Get.argtypes = [ADL_CONTEXT_HANDLE, c_int, POINTER(c_int), POINTER(c_int)]
 
+ADL2_Overdrive5_ODParameters_Get = _libadl.ADL2_Overdrive5_ODParameters_Get
+ADL2_Overdrive5_ODParameters_Get.restype = c_int
+ADL2_Overdrive5_ODParameters_Get.argtypes = [ADL_CONTEXT_HANDLE, c_int, POINTER(ADLODParameters)]
+
+ADL2_Overdrive5_FanSpeedInfo_Get = _libadl.ADL2_Overdrive5_FanSpeedInfo_Get
+ADL2_Overdrive5_FanSpeedInfo_Get.restype = c_int
+ADL2_Overdrive5_FanSpeedInfo_Get.argtypes = [ADL_CONTEXT_HANDLE, c_int, c_int, POINTER(ADLFanSpeedInfo)]
+
 # ***** END OF NEW ADL2 WRAPPER *****
