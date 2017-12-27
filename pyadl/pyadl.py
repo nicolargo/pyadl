@@ -220,7 +220,7 @@ class ADLManager(object):
         if speedType != ADL_DEVICE_FAN_SPEED_TYPE_PERCENTAGE and speedType != ADL_DEVICE_FAN_SPEED_TYPE_RPM:
             raise ADLError("Invalid fan speed type")
 
-        if reload or (device.fanSpeedPercentageRange == None and speedType == ADL_DEVICE_FAN_SPEED_TYPE_PERCENTAGE) or (device.fanSpeedPercentageRPM == None and speedType == ADL_DEVICE_FAN_SPEED_TYPE_RPM):
+        if reload or (device.fanSpeedPercentageRange == None and speedType == ADL_DEVICE_FAN_SPEED_TYPE_PERCENTAGE) or (device.fanSpeedRPMRange == None and speedType == ADL_DEVICE_FAN_SPEED_TYPE_RPM):
 
             fan_speed_info = ADLFanSpeedInfo()
             fan_speed_info.iSize = sizeof(fan_speed_info)

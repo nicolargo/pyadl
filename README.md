@@ -5,7 +5,71 @@ A simple Python Wrapper for the AMD/ATI ADL lib.
 
 It will be used in Glances to monitor GPU performance.
 
+Usage:
+
+First, import:
+from pyadl import *
+
+To get the supported devices list
+Return: Array of ADLDevice
+ADLManager.getInstance().getDevices()
+
+For the following methods, device is an instance of ADLDevice
+
+Get the current core voltage in mV
+Return: Float
+device.getCurrentCoreVoltage()
+
+Get the current engine frequency in MHz
+Return: Float
+device.getCurrentEngineClock()
+
+Get the current fan speed in a specified unit
+Parameters: 
+	speedType: ADL_DEVICE_FAN_SPEED_TYPE_PERCENTAGE or ADL_DEVICE_FAN_SPEED_TYPE_RPM
+Return: Integer
+device.getCurrentFanSpeed(speedType):
+
+Get the current memory frequency in MHz
+Return: Float
+device.getCurrentMemoryClock()
+
+Get the current temperature in Celsius
+Return: Float
+device.getCurrentTemperature()
+
+Get the current load in percentage
+Return: Integer
+device.getCurrentUsage():
+
+Get the core voltage range
+Parameters:
+	reload: Force reload the cached data. Default: False
+Return: (Min: Float, Max: Float)
+device.getCoreVoltageRange(reload):
+
+Get the engine clock frequency range 
+Parameters:
+	reload: Force reload the cached data. Default: False
+Return: (Min: Float, Max: Float)
+device.getEngineClockRange(reload):
+
+Get the fan speed range in the specified unit
+Parameters:
+	speedType: ADL_DEVICE_FAN_SPEED_TYPE_PERCENTAGE or ADL_DEVICE_FAN_SPEED_TYPE_RPM
+	reload: Force reload the cached data. Default: False
+Return: (Min: Integer, Max: Integer)
+device.getFanSpeedRange(speedType, reload):
+
+Get the memory clock frequency range (Min, Max)
+Parameters:
+	reload: Force reload the cached data. Default: False
+Return: (Min: Float, Max: Float)
+device.getMemoryClockRange(reload):
+
+
 For testing:
+
 python test.py
 Options:
   -h, --help           show this help message and exit
