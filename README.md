@@ -5,7 +5,8 @@ A simple Python Wrapper for the AMD/ATI ADL lib.
 
 It will be used in Glances to monitor GPU performance.
 
-Usage:
+Library usage
+=============
 
 First, import:
 
@@ -106,17 +107,19 @@ Return: (Min: Float, Max: Float)
 For testing
 ===========
 
-python test.py
-Options:
-  -h, --help           show this help message and exit
-  -l, --list-adapters  Lists all detected and supported display adapters.
-  -s, --status         Shows current clock speeds, core voltage, utilization
-                       and performance level.
+.. code-block:: python
 
-Example outputs:
+    python test.py
+    Options:
+      -h, --help           show this help message and exit
+      -l, --list-adapters  Lists all detected and supported display adapters.
+      -s, --status         Shows current clock speeds, core voltage, utilization
+                           and performance level.
+
 On a single card machine:
 
 	.. code-block:: python
+
 			python test.py -s
 			0. AMD Radeon (TM) R9 380 Series
 		        Engine core voltage: -2076327552 mV (0.0 mV - 0.0 mV)
@@ -127,7 +130,10 @@ On a single card machine:
 		        Temperature: 77.0 Celsius
 		        Usage: 100 %
 
-			On a miner rig with 5 RX 460:
+On a miner rig with 5 RX 460:
+
+.. code-block:: python
+
 			python test.py -s
 			0. b'Radeon(TM) RX 460 Graphics'
 					Engine core voltage: 1230037376 mV (0.0 mV - 0.0 mV)
