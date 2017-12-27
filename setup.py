@@ -11,7 +11,7 @@ with open(os.path.join('pyadl', '__init__.py'), encoding='utf-8') as f:
 
 
 data_files = [
-    ('share/doc/pyadl', ['AUTHORS', 'README.md'])
+    ('share/doc/pyadl', ['AUTHORS', 'README.rst'])
 ]
 
 
