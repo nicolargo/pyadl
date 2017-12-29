@@ -1,37 +1,19 @@
 #!/usr/bin/env python
 
-# import os
-# import sys
-# import glob
+import os
+import sys
+import re
 
 from setuptools import setup
 
-with open(os.path.join('pyadl', '__init__.py'), encoding='utf-8') as f:
+with open(os.path.join('pyadl', '__init__.py')) as f:
     version = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", f.read(), re.M).group(1)
-
-
-data_files = [
-    ('share/doc/pyadl', ['AUTHORS', 'README.rst'])
-]
 
 
 def get_data_files():
     data_files = [
-        ('share/doc/pyadl', ['AUTHORS', 'NEWS', 'README.md'])
+        ('share/doc/pyadl', ['AUTHORS', 'NEWS', 'README.rst'])
     ]
-
-    # if hasattr(sys, 'real_prefix') or 'bsd' in sys.platform:
-    #     conf_path = os.path.join(sys.prefix, 'etc', 'glances')
-    # elif not hasattr(sys, 'real_prefix') and 'linux' in sys.platform:
-    #     conf_path = os.path.join('/etc', 'glances')
-    # elif 'darwin' in sys.platform:
-    #     conf_path = os.path.join('/usr/local', 'etc', 'glances')
-    # elif 'win32' in sys.platform:
-    #     conf_path = os.path.join(os.environ.get('APPDATA'), 'glances')
-    # data_files.append((conf_path, ['conf/glances.conf']))
-
-    # for mo in glob.glob('i18n/*/LC_MESSAGES/*.mo'):
-    #     data_files.append((os.path.dirname(mo).replace('i18n/', 'share/locale/'), [mo]))
 
     return data_files
 
@@ -47,25 +29,26 @@ def get_requires():
 
 setup(
     name='pyadl',
-    version='0.1',
-    description="...",
-    long_description=open('README.md').read(),
-    author='Nicolas Hennion',
-    author_email='nicolas@nicolargo.com',
+    version=version,
+    description="A simple Python Wrapper for the AMD/ATI ADL lib.",
+    long_description=open('README.rst').read(),
+    author='Gergo Szabo (aka) hunasdf',
+    author_email='szager88@hmail.com',
     url='https://github.com/nicolargo/pyadl',
-    #download_url='https://s3.amazonaws.com/pyadl/pyadl-0.1.tar.gz',
-    license="LGPL",
-    keywords="...",
+    license="MIT",
+    keywords="amd ati driver wrapper monitoring gpu",
     install_requires=get_requires(),
     extras_require={},
     packages=['pyadl'],
     include_package_data=True,
     data_files=get_data_files(),
-    # test_suite="pyadl.test",
-    entry_points={"console_scripts": ["pyadl=pyadl.pyadl:main"]},
+    # entry_points={"console_scripts": ["pyadl=pyadl.pyadl:main"]},
     classifiers=[
         'Development Status :: 4 - Beta',
-        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
+        'Topic :: System :: Hardware :: Hardware Drivers',
+        'Topic :: System :: Monitoring',
     ]
 )
