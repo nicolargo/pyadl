@@ -137,7 +137,7 @@ For testing
 
 On a single card machine:
 
-.. code-block:: consile
+.. code-block:: console
 
     $ python test.py -s
     0. AMD Radeon (TM) R9 380 Series
